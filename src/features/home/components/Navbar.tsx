@@ -19,7 +19,7 @@ export default function Navbar() {
         <Spacer />
 
         <Flex gap={3}>
-          <NavbarButton label="Draft" />
+          <NavbarButton label="My Leagues" />
 
           <NavbarButton label="Stats" />
 
