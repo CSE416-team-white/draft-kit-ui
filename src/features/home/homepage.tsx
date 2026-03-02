@@ -1,46 +1,51 @@
 'use client';
 
-import { Box, Heading, SimpleGrid } from '@chakra-ui/react';
-import FeatureCard from './home/components/FeatureCard';
-import Navbar from './home/components/Navbar';
+import { Box, SimpleGrid } from '@chakra-ui/react';
+import FeatureCard from './components/FeatureCard';
 
 const features = [
   {
     title: 'Draft Board',
-    description: 'View and manage the live draft board in real time.',
+    description: 'View and manage the live draft board in real time',
     buttonText: 'Go to Draft',
+    href: '/draft',
   },
   {
     title: 'Injury Report',
     description: 'Browse current injury status of all players',
     buttonText: 'View Reports',
+    href: '/injuries',
   },
   {
-    title: 'My Team',
-    description: 'Track your roster and category strengths.',
-    buttonText: 'View Team',
+    title: 'Mock Draft',
+    description:
+      'Simulate through mock drafts to prepare for your real draft day',
+    buttonText: 'View Mock Draft',
+    href: '/mock-draft',
   },
   {
     title: 'Depth Charts',
     description: 'View full depth charts across MLB',
     buttonText: 'View Depth Charts',
+    href: '/depth-charts',
   },
   {
     title: 'League Setup',
-    description: 'Configure league settings and scoring format.',
+    description: 'Configure league settings and scoring format',
     buttonText: 'Setup League',
+    href: '/league',
   },
   {
     title: 'Player Stats',
     description: 'View all player stats from previous seasons',
     buttonText: 'View Stats',
+    href: '/stats',
   },
 ];
 
 export default function HomePage() {
   return (
     <Box>
-      <Navbar />
       <SimpleGrid columns={{ base: 1, md: 2 }} spacing={8}>
         {features.map((feature) => (
           <FeatureCard key={feature.title} {...feature} />

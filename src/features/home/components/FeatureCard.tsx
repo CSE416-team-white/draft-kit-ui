@@ -1,20 +1,20 @@
 'use client';
 
-import { Box, Heading, Text, Button, VStack } from '@chakra-ui/react';
+import { Box, Heading, Text, VStack } from '@chakra-ui/react';
 import CardButton from '@/shared/components/ui/CardButton';
 
 type FeatureCardProps = {
   title: string;
   description: string;
   buttonText: string;
-  onClick?: () => void;
+  href: string;
 };
 
 export default function FeatureCard({
   title,
   description,
   buttonText,
-  onClick,
+  href,
 }: FeatureCardProps) {
   return (
     <Box
@@ -35,7 +35,7 @@ export default function FeatureCard({
           </Text>
         </div>
 
-        <CardButton label={buttonText}></CardButton>
+        <CardButton label={buttonText} href={href} />
       </VStack>
     </Box>
   );
