@@ -1,7 +1,8 @@
 'use client';
 
-import { VStack, Spinner, Text } from '@chakra-ui/react';
+import { Spinner, Text, SimpleGrid } from '@chakra-ui/react';
 import { useLeagues } from '../hooks/useLeagues';
+import LeagueCard from './LeagueCard';
 
 export default function LeagueList() {
   const { data, isLoading, error } = useLeagues();
@@ -9,12 +10,16 @@ export default function LeagueList() {
   if (isLoading) return <Spinner />;
 
   if (error) return <Text>Error loading leagues</Text>;
-  console.log('Fetched leagues:', data);
+
   return (
-    <VStack spacing={4}>
-      {data?.data?.map((league) => (
-        <Text key={league.id}>{league.name}</Text>
+    <SimpleGrid columns={{ base: 3 }}>
+      <LeagueCard
+        label="+ New League"
+        onClick={() => console.log('Create new league')}
+      />
+      {data?.data.map((league) => (
+        <LeagueCard key={league._id} league={league} />
       ))}
-    </VStack>
+    </SimpleGrid>
   );
 }
