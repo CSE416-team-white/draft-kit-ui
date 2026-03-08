@@ -27,7 +27,10 @@ class ApiClient {
     return headers;
   }
 
-  private buildURL(endpoint: string, params?: Record<string, string | number | boolean | undefined>): string {
+  private buildURL(
+    endpoint: string,
+    params?: Record<string, string | number | boolean | undefined>,
+  ): string {
     const url = new URL(`${this.baseURL}${endpoint}`);
 
     if (params) {
@@ -56,7 +59,11 @@ class ApiClient {
     return response.json();
   }
 
-  async post<T>(endpoint: string, data?: unknown, options?: RequestOptions): Promise<T> {
+  async post<T>(
+    endpoint: string,
+    data?: unknown,
+    options?: RequestOptions,
+  ): Promise<T> {
     const url = this.buildURL(endpoint, options?.params);
     const response = await fetch(url, {
       method: 'POST',
@@ -72,7 +79,11 @@ class ApiClient {
     return response.json();
   }
 
-  async put<T>(endpoint: string, data?: unknown, options?: RequestOptions): Promise<T> {
+  async put<T>(
+    endpoint: string,
+    data?: unknown,
+    options?: RequestOptions,
+  ): Promise<T> {
     const url = this.buildURL(endpoint, options?.params);
     const response = await fetch(url, {
       method: 'PUT',
