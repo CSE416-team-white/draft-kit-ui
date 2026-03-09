@@ -166,12 +166,6 @@ export default function RankingsTable() {
       );
     });
 
-    if (allPlayers.length > 0 && filteredPlayers.length === 0) {
-      setError('failed to retrieve data');
-      setPlayers([]);
-      return;
-    }
-
     setError(null);
     setPlayers(filteredPlayers.slice(0, 50));
   }, [
