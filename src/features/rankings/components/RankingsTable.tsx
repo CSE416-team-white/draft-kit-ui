@@ -54,7 +54,11 @@ type PlayersResponse = {
   };
 };
 
-export default function RankingsTable() {
+type RankingsTableProps = {
+  refreshKey?: number;
+};
+
+export default function RankingsTable({ refreshKey = 0 }: RankingsTableProps) {
   const [allPlayers, setAllPlayers] = useState<Player[]>([]);
   const [players, setPlayers] = useState<Player[]>([]);
   const [positions, setPositions] = useState<string[]>([]);
@@ -78,20 +82,18 @@ export default function RankingsTable() {
       setError(null);
 
       try {
-        const firstPage = await apiClient.get<PlayersResponse>(
-          '/api/players',
-          { params: { limit: 100, page: 1 } }
-        );
+        const firstPage = await apiClient.get<PlayersResponse>('/api/players', {
+          params: { limit: 100, page: 1 },
+        });
         const firstBatch = firstPage.data ?? [];
         const totalPages = firstPage.pagination?.totalPages ?? 1;
         const pageRequests: Promise<PlayersResponse>[] = [];
 
         for (let page = 2; page <= totalPages; page += 1) {
           pageRequests.push(
-            apiClient.get<PlayersResponse>(
-              '/api/players',
-              { params: { limit: 100, page } }
-            ),
+            apiClient.get<PlayersResponse>('/api/players', {
+              params: { limit: 100, page },
+            }),
           );
         }
 
@@ -140,7 +142,7 @@ export default function RankingsTable() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [refreshKey]);
 
   useEffect(() => {
     const normalizedSearch = appliedSearch.trim().toLowerCase();
