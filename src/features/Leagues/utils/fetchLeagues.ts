@@ -1,4 +1,6 @@
+import { apiClient } from '@/shared/utils/api-client';
 import { League } from '../types/leagues.types';
+
 interface LeaguesResponse {
   success: boolean;
   data: League[];
@@ -11,8 +13,5 @@ interface LeaguesResponse {
 }
 
 export async function fetchLeagues(): Promise<LeaguesResponse> {
-  const res = await fetch('http://localhost:3001/api/leagues');
-  if (!res.ok) throw new Error('Failed to fetch leagues');
-
-  return res.json();
+  return apiClient.get<LeaguesResponse>('/api/leagues');
 }
