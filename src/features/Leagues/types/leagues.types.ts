@@ -42,3 +42,8 @@ export interface LeaguesResponse {
     totalPages: number;
   };
 }
+
+export interface LeagueResponse {
+  success: boolean;
+  data: League;
+}
