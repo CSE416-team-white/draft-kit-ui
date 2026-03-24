@@ -1,14 +1,14 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { CreateLeagueInput } from '../types/leagues.types';
-import { createLeague } from '../utils/createLeague';
+import { deleteLeague } from '../utils/deleteLeague';
 
-export function useCreateLeague() {
+export function useDeleteLeague() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (input: CreateLeagueInput) => createLeague(input),
+    mutationFn: (leagueId: string) => deleteLeague(leagueId),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['leagues'] });
+      void queryClient.invalidateQueries({ queryKey: ['league'] });
     },
   });
 }

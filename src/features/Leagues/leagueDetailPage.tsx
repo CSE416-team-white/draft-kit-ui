@@ -1,6 +1,13 @@
 'use client';
 
+import { useRef } from 'react';
 import {
+  AlertDialog,
+  AlertDialogBody,
+  AlertDialogContent,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogOverlay,
   Box,
   Heading,
   Spinner,
@@ -14,30 +21,66 @@ import {
   Thead,
   TableContainer,
   Button,
+  useDisclosure,
 } from '@chakra-ui/react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useLeague } from './hooks/useLeague';
+import { useDeleteLeague } from './hooks/useDeleteLeague';
+import UpsertLeagueModal from './components/UpsertLeagueModal';
+
+function parseTeamsFromDescription(description?: string): number | undefined {
+  if (!description) return undefined;
+  const match = description.match(/(\d+)\s*teams?/i);
+  if (!match) return undefined;
+  const value = Number.parseInt(match[1] ?? '', 10);
+  return Number.isNaN(value) ? undefined : value;
+}
 
 export default function LeagueDetailPage({ leagueId }: { leagueId: string }) {
   const { data, isLoading, error } = useLeague(leagueId);
+  const router = useRouter();
+  const editModal = useDisclosure();
+  const deleteConfirm = useDisclosure();
+  const cancelRef = useRef<HTMLButtonElement>(null);
+  const deleteLeagueMutation = useDeleteLeague();
 
   if (isLoading) return <Spinner />;
   if (error) return <Text>Unable to load league</Text>;
 
   const league = data?.data;
   if (!league) return <Text>League not found</Text>;
+  const teams = league.teams ?? parseTeamsFromDescription(league.description);
+  const leagueIdToDelete = league._id;
+
+  async function handleDelete() {
+    try {
+      await deleteLeagueMutation.mutateAsync(leagueIdToDelete);
+      deleteConfirm.onClose();
+      router.push('/leagues');
+    } catch (err) {
+      console.error(err);
+    }
+  }
 
   return (
     <Box p={8}>
       <Stack spacing={4}>
-        <Button
-          as={Link}
-          href="/leagues"
-          variant="ghost"
-          alignSelf="flex-start"
-        >
-          Back
-        </Button>
+        <Stack direction="row" spacing={2} align="center">
+          <Button as={Link} href="/leagues" variant="ghost">
+            Back
+          </Button>
+          <Button onClick={editModal.onOpen} variant="outline">
+            Edit
+          </Button>
+          <Button
+            onClick={deleteConfirm.onOpen}
+            colorScheme="red"
+            variant="outline"
+          >
+            Delete
+          </Button>
+        </Stack>
 
         <Heading>{league.name}</Heading>
 
@@ -56,7 +99,7 @@ export default function LeagueDetailPage({ leagueId }: { leagueId: string }) {
               </Tr>
               <Tr>
                 <Td>Teams</Td>
-                <Td>{league.teams ?? '-'}</Td>
+                <Td>{teams ?? '-'}</Td>
               </Tr>
               <Tr>
                 <Td>Draft Type</Td>
@@ -94,6 +137,50 @@ export default function LeagueDetailPage({ leagueId }: { leagueId: string }) {
           </Box>
         ) : null}
       </Stack>
+
+      <UpsertLeagueModal
+        isOpen={editModal.isOpen}
+        onClose={editModal.onClose}
+        initialLeague={league}
+      />
+
+      <AlertDialog
+        isOpen={deleteConfirm.isOpen}
+        leastDestructiveRef={cancelRef}
+        onClose={deleteConfirm.onClose}
+      >
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogHeader fontSize="lg" fontWeight="bold">
+              Delete League
+            </AlertDialogHeader>
+
+            <AlertDialogBody>
+              This will permanently delete “{league.name}”. This action cannot
+              be undone.
+              {deleteLeagueMutation.isError ? (
+                <Text mt={2} color="red.500">
+                  Failed to delete league. Check API connection and API key.
+                </Text>
+              ) : null}
+            </AlertDialogBody>
+
+            <AlertDialogFooter>
+              <Button ref={cancelRef} onClick={deleteConfirm.onClose}>
+                Cancel
+              </Button>
+              <Button
+                colorScheme="red"
+                onClick={handleDelete}
+                ml={3}
+                isLoading={deleteLeagueMutation.isPending}
+              >
+                Delete
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
     </Box>
   );
 }
