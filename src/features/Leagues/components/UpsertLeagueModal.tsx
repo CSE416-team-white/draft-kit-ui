@@ -46,9 +46,9 @@ export default function UpsertLeagueModal({
 
   type LeagueForm = {
     leagueName: string;
-    teams: number;
+    teams: string;
     draftType: 'auction';
-    rosterSlots: RosterSlots;
+    rosterSlots: Record<keyof RosterSlots, string>;
   };
 
   const DEFAULT_FORM: LeagueForm = useMemo(() => {
@@ -59,11 +59,18 @@ export default function UpsertLeagueModal({
 
     return {
       leagueName: initialLeague?.name ?? '',
-      teams,
+      teams: String(teams),
       draftType: 'auction',
-      rosterSlots: initialLeague?.rosterSlots
-        ? { ...DEFAULT_ROSTER_SLOTS, ...initialLeague.rosterSlots }
-        : { ...DEFAULT_ROSTER_SLOTS },
+      rosterSlots: ROSTER_POSITIONS.reduce(
+        (acc, position) => {
+          const value =
+            initialLeague?.rosterSlots?.[position] ??
+            DEFAULT_ROSTER_SLOTS[position];
+          acc[position] = String(value);
+          return acc;
+        },
+        {} as Record<keyof RosterSlots, string>,
+      ),
     };
   }, [initialLeague]);
 
@@ -75,17 +82,23 @@ export default function UpsertLeagueModal({
   }, [DEFAULT_FORM, isOpen]);
 
   const canSubmit = useMemo(() => {
-    return form.leagueName.trim().length > 0 && form.teams > 1;
+    const parsedTeams = Number.parseInt(form.teams, 10);
+
+    return (
+      form.leagueName.trim().length > 0 &&
+      !Number.isNaN(parsedTeams) &&
+      parsedTeams > 1
+    );
   }, [form.leagueName, form.teams]);
 
   function handleRosterSlotChange(position: keyof RosterSlots, value: string) {
-    const parsed = Number.parseInt(value, 10);
-
+    // Allow users to freely edit (including empty), without snapping values.
+    if (value !== '' && !/^\d+$/.test(value)) return;
     setForm((prev) => ({
       ...prev,
       rosterSlots: {
         ...prev.rosterSlots,
-        [position]: Number.isNaN(parsed) || parsed < 0 ? 0 : parsed,
+        [position]: value,
       },
     }));
   }
@@ -103,11 +116,21 @@ export default function UpsertLeagueModal({
   async function handleSubmit() {
     if (!canSubmit) return;
 
+    const parsedTeams = Number.parseInt(form.teams, 10);
+    if (Number.isNaN(parsedTeams)) return;
+
+    const rosterSlots = ROSTER_POSITIONS.reduce((acc, position) => {
+      const raw = form.rosterSlots[position];
+      const parsed = Number.parseInt(raw, 10);
+      acc[position] = Number.isNaN(parsed) ? 0 : Math.max(0, parsed);
+      return acc;
+    }, {} as RosterSlots);
+
     const payload: CreateLeagueInput = {
       name: form.leagueName.trim(),
-      teams: form.teams,
+      teams: Math.max(2, parsedTeams),
       draftType: form.draftType,
-      rosterSlots: form.rosterSlots,
+      rosterSlots,
     };
 
     try {
@@ -152,12 +175,9 @@ export default function UpsertLeagueModal({
                 min={2}
                 value={form.teams}
                 onChange={(e) => {
-                  const value = Number.parseInt(e.target.value, 10);
-
-                  setForm((prev) => ({
-                    ...prev,
-                    teams: Number.isNaN(value) ? 2 : Math.max(2, value),
-                  }));
+                  const next = e.target.value;
+                  if (next !== '' && !/^\d+$/.test(next)) return;
+                  setForm((prev) => ({ ...prev, teams: next }));
                 }}
               />
             </FormControl>

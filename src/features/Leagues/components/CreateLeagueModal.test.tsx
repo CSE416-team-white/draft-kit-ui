@@ -98,15 +98,14 @@ describe('UpsertLeagueModal (create)', () => {
     });
   });
 
-  it('negative roster values convert to 0', () => {
+  it('does not auto-fill roster inputs while editing', () => {
     renderModal();
 
-    const rosterInputs = screen.getAllByRole('spinbutton');
-    const firstRosterInput = rosterInputs[1];
+    const cInput = screen.getByLabelText(/^C$/i) as HTMLInputElement;
+    expect(cInput.value).toBe('1');
 
-    fireEvent.change(firstRosterInput, { target: { value: '-5' } });
+    fireEvent.change(cInput, { target: { value: '' } });
 
-    const updated = rosterInputs[1] as HTMLInputElement;
-    expect(updated.value).toBe('0');
+    expect(cInput.value).toBe('');
   });
 });

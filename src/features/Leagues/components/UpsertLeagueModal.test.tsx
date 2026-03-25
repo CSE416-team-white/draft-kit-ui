@@ -40,7 +40,11 @@ describe('UpsertLeagueModal', () => {
       externalId: 'custom-league-123',
       name: 'Old Name',
       teams: 10,
+      description: '10 teams',
+      format: 'roto',
       draftType: 'auction',
+      battingCategories: ['R', 'HR', 'RBI', 'SB', 'AVG'],
+      pitchingCategories: ['W', 'SV', 'K', 'ERA', 'WHIP'],
       rosterSlots: {
         C: 1,
         '1B': 1,
