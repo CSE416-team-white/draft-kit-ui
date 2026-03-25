@@ -4,7 +4,7 @@ import { Spinner, Text, SimpleGrid, useDisclosure } from '@chakra-ui/react';
 import { useRouter } from 'next/navigation';
 import { useLeagues } from '../hooks/useLeagues';
 import LeagueCard from './LeagueCard';
-import CreateLeagueModal from './CreateLeagueModal';
+import UpsertLeagueModal from './UpsertLeagueModal';
 
 export default function LeagueList() {
   const router = useRouter();
@@ -27,7 +27,7 @@ export default function LeagueList() {
           />
         ))}
       </SimpleGrid>
-      <CreateLeagueModal isOpen={isOpen} onClose={onClose} />
+      <UpsertLeagueModal isOpen={isOpen} onClose={onClose} />
     </>
   );
 }

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { ChakraProvider } from '@chakra-ui/react';
 import UpsertLeagueModal from './UpsertLeagueModal';
 import type { League } from '../types/leagues.types';
@@ -63,12 +63,13 @@ describe('UpsertLeagueModal', () => {
     const nameInput = screen.getByLabelText(/league name/i);
     fireEvent.change(nameInput, { target: { value: 'New Name' } });
 
-    const saveButton = screen.getByRole('button', { name: /save changes/i });
+    const saveButton = screen.getByRole('button', {
+      name: /save changes/i,
+    }) as HTMLButtonElement;
+    expect(saveButton.disabled).toBe(false);
     fireEvent.click(saveButton);
 
-    await waitFor(() => {
-      expect(mutateAsyncMock).toHaveBeenCalledTimes(1);
-    });
+    expect(mutateAsyncMock).toHaveBeenCalledTimes(1);
 
     const args = mutateAsyncMock.mock.calls[0][0];
     expect(args.existingLeague).toEqual(initialLeague);

@@ -28,14 +28,7 @@ import { useRouter } from 'next/navigation';
 import { useLeague } from './hooks/useLeague';
 import { useDeleteLeague } from './hooks/useDeleteLeague';
 import UpsertLeagueModal from './components/UpsertLeagueModal';
-
-function parseTeamsFromDescription(description?: string): number | undefined {
-  if (!description) return undefined;
-  const match = description.match(/(\d+)\s*teams?/i);
-  if (!match) return undefined;
-  const value = Number.parseInt(match[1] ?? '', 10);
-  return Number.isNaN(value) ? undefined : value;
-}
+import { parseTeamsFromDescription } from './utils/leagueForm';
 
 export default function LeagueDetailPage({ leagueId }: { leagueId: string }) {
   const { data, isLoading, error } = useLeague(leagueId);

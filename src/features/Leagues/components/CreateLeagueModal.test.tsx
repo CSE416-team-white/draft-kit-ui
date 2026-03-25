@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { ChakraProvider } from '@chakra-ui/react';
-import CreateLeagueModal from './CreateLeagueModal';
+import UpsertLeagueModal from './UpsertLeagueModal';
 
 // mock hook
 const mutateAsyncMock = vi.fn();
@@ -18,12 +18,12 @@ vi.mock('../hooks/useUpsertLeague', () => ({
 function renderModal() {
   render(
     <ChakraProvider>
-      <CreateLeagueModal isOpen={true} onClose={vi.fn()} />
+      <UpsertLeagueModal isOpen={true} onClose={vi.fn()} />
     </ChakraProvider>,
   );
 }
 
-describe('CreateLeagueModal', () => {
+describe('UpsertLeagueModal (create)', () => {
   beforeEach(() => {
     mutateAsyncMock.mockReset();
   });
