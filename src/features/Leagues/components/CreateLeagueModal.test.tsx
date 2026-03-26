@@ -1,13 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { ChakraProvider } from '@chakra-ui/react';
-import CreateLeagueModal from './CreateLeagueModal';
+import UpsertLeagueModal from './UpsertLeagueModal';
 
 // mock hook
 const mutateAsyncMock = vi.fn();
 
-vi.mock('../hooks/useCreateLeague', () => ({
-  useCreateLeague: () => ({
+vi.mock('../hooks/useUpsertLeague', () => ({
+  useUpsertLeague: () => ({
     mutateAsync: mutateAsyncMock,
     isPending: false,
     isError: false,
@@ -18,12 +18,12 @@ vi.mock('../hooks/useCreateLeague', () => ({
 function renderModal() {
   render(
     <ChakraProvider>
-      <CreateLeagueModal isOpen={true} onClose={vi.fn()} />
+      <UpsertLeagueModal isOpen={true} onClose={vi.fn()} />
     </ChakraProvider>,
   );
 }
 
-describe('CreateLeagueModal', () => {
+describe('UpsertLeagueModal (create)', () => {
   beforeEach(() => {
     mutateAsyncMock.mockReset();
   });
@@ -83,7 +83,8 @@ describe('CreateLeagueModal', () => {
       expect(mutateAsyncMock).toHaveBeenCalledTimes(1);
     });
 
-    const payload = mutateAsyncMock.mock.calls[0][0];
+    const args = mutateAsyncMock.mock.calls[0][0];
+    const payload = args.input;
 
     expect(payload.name).toBe('Test League');
     expect(payload.teams).toBe(12);
@@ -97,15 +98,14 @@ describe('CreateLeagueModal', () => {
     });
   });
 
-  it('negative roster values convert to 0', () => {
+  it('does not auto-fill roster inputs while editing', () => {
     renderModal();
 
-    const rosterInputs = screen.getAllByRole('spinbutton');
-    const firstRosterInput = rosterInputs[1];
+    const cInput = screen.getByLabelText(/^C$/i) as HTMLInputElement;
+    expect(cInput.value).toBe('1');
 
-    fireEvent.change(firstRosterInput, { target: { value: '-5' } });
+    fireEvent.change(cInput, { target: { value: '' } });
 
-    const updated = rosterInputs[1] as HTMLInputElement;
-    expect(updated.value).toBe('0');
+    expect(cInput.value).toBe('');
   });
 });

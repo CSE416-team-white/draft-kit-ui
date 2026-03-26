@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Button,
   FormControl,
@@ -19,75 +19,86 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react';
-import type { CreateLeagueInput, RosterSlots } from '../types/leagues.types';
-import { useCreateLeague } from '../hooks/useCreateLeague';
+import type {
+  CreateLeagueInput,
+  League,
+  RosterSlots,
+} from '../types/leagues.types';
+import { useUpsertLeague } from '../hooks/useUpsertLeague';
+import {
+  DEFAULT_ROSTER_SLOTS,
+  parseTeamsFromDescription,
+  ROSTER_POSITIONS,
+} from '../utils/leagueForm';
 
-type CreateLeagueModalProps = {
+type UpsertLeagueModalProps = {
   isOpen: boolean;
   onClose: () => void;
+  initialLeague?: League;
 };
 
-const DEFAULT_ROSTER_SLOTS: RosterSlots = {
-  C: 1,
-  '1B': 1,
-  '2B': 1,
-  '3B': 1,
-  SS: 1,
-  OF: 3,
-  DH: 0,
-  SP: 5,
-  RP: 2,
-  UTIL: 0,
-  BENCH: 0,
-};
-
-const ROSTER_POSITIONS: (keyof RosterSlots)[] = [
-  'C',
-  '1B',
-  '2B',
-  '3B',
-  'SS',
-  'OF',
-  'DH',
-  'SP',
-  'RP',
-  'UTIL',
-  'BENCH',
-];
-
-export default function CreateLeagueModal({
+export default function UpsertLeagueModal({
   isOpen,
   onClose,
-}: CreateLeagueModalProps) {
-  const createLeagueMutation = useCreateLeague();
+  initialLeague,
+}: UpsertLeagueModalProps) {
+  const upsertLeagueMutation = useUpsertLeague();
+
   type LeagueForm = {
     leagueName: string;
-    teams: number;
+    teams: string;
     draftType: 'auction';
-    rosterSlots: RosterSlots;
+    rosterSlots: Record<keyof RosterSlots, string>;
   };
 
-  const DEFAULT_FORM: LeagueForm = {
-    leagueName: '',
-    teams: 12,
-    draftType: 'auction',
-    rosterSlots: { ...DEFAULT_ROSTER_SLOTS },
-  };
+  const DEFAULT_FORM: LeagueForm = useMemo(() => {
+    const teams =
+      initialLeague?.teams ??
+      parseTeamsFromDescription(initialLeague?.description) ??
+      12;
+
+    return {
+      leagueName: initialLeague?.name ?? '',
+      teams: String(teams),
+      draftType: 'auction',
+      rosterSlots: ROSTER_POSITIONS.reduce(
+        (acc, position) => {
+          const value =
+            initialLeague?.rosterSlots?.[position] ??
+            DEFAULT_ROSTER_SLOTS[position];
+          acc[position] = String(value);
+          return acc;
+        },
+        {} as Record<keyof RosterSlots, string>,
+      ),
+    };
+  }, [initialLeague]);
 
   const [form, setForm] = useState<LeagueForm>(DEFAULT_FORM);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    setForm(DEFAULT_FORM);
+  }, [DEFAULT_FORM, isOpen]);
+
   const canSubmit = useMemo(() => {
-    return form.leagueName.trim().length > 0 && form.teams > 1;
+    const parsedTeams = Number.parseInt(form.teams, 10);
+
+    return (
+      form.leagueName.trim().length > 0 &&
+      !Number.isNaN(parsedTeams) &&
+      parsedTeams > 1
+    );
   }, [form.leagueName, form.teams]);
 
   function handleRosterSlotChange(position: keyof RosterSlots, value: string) {
-    const parsed = Number.parseInt(value, 10);
-
+    // Allow users to freely edit (including empty), without snapping values.
+    if (value !== '' && !/^\d+$/.test(value)) return;
     setForm((prev) => ({
       ...prev,
       rosterSlots: {
         ...prev.rosterSlots,
-        [position]: Number.isNaN(parsed) || parsed < 0 ? 0 : parsed,
+        [position]: value,
       },
     }));
   }
@@ -97,7 +108,7 @@ export default function CreateLeagueModal({
   }
 
   function handleClose() {
-    createLeagueMutation.reset();
+    upsertLeagueMutation.reset();
     resetForm();
     onClose();
   }
@@ -105,15 +116,28 @@ export default function CreateLeagueModal({
   async function handleSubmit() {
     if (!canSubmit) return;
 
+    const parsedTeams = Number.parseInt(form.teams, 10);
+    if (Number.isNaN(parsedTeams)) return;
+
+    const rosterSlots = ROSTER_POSITIONS.reduce((acc, position) => {
+      const raw = form.rosterSlots[position];
+      const parsed = Number.parseInt(raw, 10);
+      acc[position] = Number.isNaN(parsed) ? 0 : Math.max(0, parsed);
+      return acc;
+    }, {} as RosterSlots);
+
     const payload: CreateLeagueInput = {
       name: form.leagueName.trim(),
-      teams: form.teams,
+      teams: Math.max(2, parsedTeams),
       draftType: form.draftType,
-      rosterSlots: form.rosterSlots,
+      rosterSlots,
     };
 
     try {
-      await createLeagueMutation.mutateAsync(payload);
+      await upsertLeagueMutation.mutateAsync({
+        input: payload,
+        existingLeague: initialLeague,
+      });
       resetForm();
       handleClose();
     } catch (error) {
@@ -125,7 +149,9 @@ export default function CreateLeagueModal({
     <Modal isOpen={isOpen} onClose={handleClose} size="xl">
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader>Create League</ModalHeader>
+        <ModalHeader>
+          {initialLeague ? 'Edit League' : 'Create League'}
+        </ModalHeader>
         <ModalCloseButton />
         <ModalBody>
           <VStack spacing={4} align="stretch">
@@ -149,12 +175,9 @@ export default function CreateLeagueModal({
                 min={2}
                 value={form.teams}
                 onChange={(e) => {
-                  const value = Number.parseInt(e.target.value, 10);
-
-                  setForm((prev) => ({
-                    ...prev,
-                    teams: Number.isNaN(value) ? 2 : Math.max(2, value),
-                  }));
+                  const next = e.target.value;
+                  if (next !== '' && !/^\d+$/.test(next)) return;
+                  setForm((prev) => ({ ...prev, teams: next }));
                 }}
               />
             </FormControl>
@@ -203,9 +226,9 @@ export default function CreateLeagueModal({
               </Grid>
             </FormControl>
 
-            {createLeagueMutation.isError ? (
+            {upsertLeagueMutation.isError ? (
               <Text color="red.500" fontSize="sm">
-                Failed to create league. Check API connection and API key.
+                Failed to save league. Check API connection and API key.
               </Text>
             ) : null}
           </VStack>
@@ -218,9 +241,9 @@ export default function CreateLeagueModal({
             colorScheme="blue"
             onClick={handleSubmit}
             isDisabled={!canSubmit}
-            isLoading={createLeagueMutation.isPending}
+            isLoading={upsertLeagueMutation.isPending}
           >
-            Create League
+            {initialLeague ? 'Save Changes' : 'Create League'}
           </Button>
         </ModalFooter>
       </ModalContent>

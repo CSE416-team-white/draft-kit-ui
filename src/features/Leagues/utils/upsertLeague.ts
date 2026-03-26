@@ -2,6 +2,7 @@ import { apiClient } from '@/shared/utils/api-client';
 import type {
   CreateLeagueInput,
   CreateLeagueResponse,
+  League,
 } from '../types/leagues.types';
 
 const DEFAULT_BATTING_CATEGORIES = ['R', 'HR', 'RBI', 'SB', 'AVG'] as const;
@@ -17,19 +18,33 @@ function toExternalId(name: string): string {
   return `custom-${slug || 'league'}-${Date.now()}`;
 }
 
-export async function createLeague(
+export async function upsertLeague(
   input: CreateLeagueInput,
+  existingLeague?: League,
 ): Promise<CreateLeagueResponse> {
+  if (existingLeague && !existingLeague.externalId) {
+    throw new Error(
+      'Unable to update league: missing externalId. Refresh and try again.',
+    );
+  }
+
+  const externalId = existingLeague?.externalId ?? toExternalId(input.name);
+
   return apiClient.post<CreateLeagueResponse>('/api/leagues', {
-    externalId: toExternalId(input.name),
+    externalId,
     name: input.name,
     description: `${input.teams} teams`,
-    format: 'roto',
+    format: existingLeague?.format ?? 'roto',
     draftType: input.draftType,
-    battingCategories: [...DEFAULT_BATTING_CATEGORIES],
-    pitchingCategories: [...DEFAULT_PITCHING_CATEGORIES],
+    battingCategories: existingLeague?.battingCategories ?? [
+      ...DEFAULT_BATTING_CATEGORIES,
+    ],
+    pitchingCategories: existingLeague?.pitchingCategories ?? [
+      ...DEFAULT_PITCHING_CATEGORIES,
+    ],
     rosterSlots: input.rosterSlots,
-    totalBudget: 260,
-    isDefault: false,
+    totalBudget: existingLeague?.totalBudget ?? 260,
+    isDefault: existingLeague?.isDefault ?? false,
+    categoryWeights: existingLeague?.categoryWeights,
   });
 }

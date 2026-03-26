@@ -14,10 +14,18 @@ export type RosterSlots = {
 
 export type League = {
   _id: string;
+  externalId?: string;
   name: string;
+  description?: string;
+  format?: 'roto' | 'h2h-points' | 'h2h-category';
   teams?: number;
   draftType?: 'auction' | 'snake';
+  battingCategories?: string[];
+  pitchingCategories?: string[];
   rosterSlots?: RosterSlots;
+  totalBudget?: number;
+  isDefault?: boolean;
+  categoryWeights?: Record<string, number>;
 };
 
 export type CreateLeagueInput = {
@@ -41,4 +49,9 @@ export interface LeaguesResponse {
     limit: number;
     totalPages: number;
   };
+}
+
+export interface LeagueResponse {
+  success: boolean;
+  data: League;
 }

@@ -1,11 +1,13 @@
 'use client';
 
 import { Spinner, Text, SimpleGrid, useDisclosure } from '@chakra-ui/react';
+import { useRouter } from 'next/navigation';
 import { useLeagues } from '../hooks/useLeagues';
 import LeagueCard from './LeagueCard';
-import CreateLeagueModal from './CreateLeagueModal';
+import UpsertLeagueModal from './UpsertLeagueModal';
 
 export default function LeagueList() {
+  const router = useRouter();
   const { data, isLoading, error } = useLeagues();
   const { isOpen, onOpen, onClose } = useDisclosure();
 
@@ -18,10 +20,14 @@ export default function LeagueList() {
       <SimpleGrid columns={{ base: 3 }}>
         <LeagueCard label="+ New League" onClick={onOpen} />
         {data?.data.map((league) => (
-          <LeagueCard key={league._id} league={league} />
+          <LeagueCard
+            key={league._id}
+            league={league}
+            onClick={() => router.push(`/leagues/${league._id}`)}
+          />
         ))}
       </SimpleGrid>
-      <CreateLeagueModal isOpen={isOpen} onClose={onClose} />
+      <UpsertLeagueModal isOpen={isOpen} onClose={onClose} />
     </>
   );
 }
