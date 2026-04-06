@@ -41,6 +41,12 @@ const features = [
     buttonText: 'View Stats',
     href: '/stats',
   },
+  {
+    title: 'Notebook',
+    description: 'Track notes, sleepers, and targets for your draft plans',
+    buttonText: 'Open Notebook',
+    href: '/notebook',
+  },
 ];
 
 export default function HomePage() {
