@@ -98,6 +98,14 @@ export default function LeagueDetailPage({ leagueId }: { leagueId: string }) {
                 <Td>Draft Type</Td>
                 <Td>{league.draftType ?? '-'}</Td>
               </Tr>
+              <Tr>
+                <Td>Starting Budget</Td>
+                <Td>
+                  {typeof league.totalBudget === 'number'
+                    ? `$${league.totalBudget}`
+                    : '-'}
+                </Td>
+              </Tr>
             </Tbody>
           </Table>
         </TableContainer>

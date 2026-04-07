@@ -43,7 +43,7 @@ export async function upsertLeague(
       ...DEFAULT_PITCHING_CATEGORIES,
     ],
     rosterSlots: input.rosterSlots,
-    totalBudget: existingLeague?.totalBudget ?? 260,
+    totalBudget: input.totalBudget,
     isDefault: existingLeague?.isDefault ?? false,
     categoryWeights: existingLeague?.categoryWeights,
   });

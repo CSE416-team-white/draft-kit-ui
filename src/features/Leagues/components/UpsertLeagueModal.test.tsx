@@ -40,6 +40,7 @@ describe('UpsertLeagueModal', () => {
       externalId: 'custom-league-123',
       name: 'Old Name',
       teams: 10,
+      totalBudget: 275,
       description: '10 teams',
       format: 'roto',
       draftType: 'auction',
@@ -66,6 +67,12 @@ describe('UpsertLeagueModal', () => {
 
     const nameInput = screen.getByLabelText(/league name/i);
     fireEvent.change(nameInput, { target: { value: 'New Name' } });
+    expect(
+      (screen.getByLabelText(/starting budget/i) as HTMLInputElement).value,
+    ).toBe('275');
+    fireEvent.change(screen.getByLabelText(/starting budget/i), {
+      target: { value: '300' },
+    });
 
     const saveButton = screen.getByRole('button', {
       name: /save changes/i,
@@ -80,5 +87,6 @@ describe('UpsertLeagueModal', () => {
     expect(args.input.name).toBe('New Name');
     expect(args.input.teams).toBe(10);
     expect(args.input.draftType).toBe('auction');
+    expect(args.input.totalBudget).toBe(300);
   });
 });
