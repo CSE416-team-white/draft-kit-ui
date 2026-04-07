@@ -12,18 +12,27 @@ export type RosterSlots = {
   BENCH: number;
 };
 
+export type TakenPlayer = [playerId: string, teamId: string, price: number];
+
+export type LeagueTeam = [
+  teamId: string,
+  teamName: string,
+  currentBudget: number,
+];
+
 export type League = {
   _id: string;
   externalId?: string;
   name: string;
   description?: string;
   format?: 'roto' | 'h2h-points' | 'h2h-category';
-  teams?: number;
   draftType?: 'auction' | 'snake';
   battingCategories?: string[];
   pitchingCategories?: string[];
   rosterSlots?: RosterSlots;
   totalBudget?: number;
+  taken_players?: TakenPlayer[];
+  teams?: LeagueTeam[];
   isDefault?: boolean;
   categoryWeights?: Record<string, number>;
 };

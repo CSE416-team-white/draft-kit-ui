@@ -32,7 +32,15 @@ vi.mock('./hooks/useLeague', () => ({
         _id: 'league-123',
         externalId: 'custom-league-123',
         name: 'My League',
-        teams: 12,
+        teams: [
+          ['team-1', 'Alpha', 240],
+          ['team-2', 'Beta', 215],
+        ],
+        taken_players: [
+          ['player-1', 'team-1', 20],
+          ['player-2', 'team-2', 45],
+        ],
+        totalBudget: 260,
         draftType: 'auction',
         rosterSlots: {
           C: 1,
@@ -89,5 +97,18 @@ describe('LeagueDetailPage', () => {
       expect(deleteMutateAsyncMock).toHaveBeenCalledWith('league-123');
       expect(pushMock).toHaveBeenCalledWith('/leagues');
     });
+  });
+
+  it('renders team budgets from the league teams array', () => {
+    render(
+      <ChakraProvider>
+        <LeagueDetailPage leagueId="league-123" />
+      </ChakraProvider>,
+    );
+
+    expect(screen.getByText('Alpha')).toBeTruthy();
+    expect(screen.getByText('Beta')).toBeTruthy();
+    expect(screen.getByText('$240')).toBeTruthy();
+    expect(screen.getByText('$215')).toBeTruthy();
   });
 });

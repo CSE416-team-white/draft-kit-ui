@@ -54,7 +54,7 @@ export default function UpsertLeagueModal({
 
   const DEFAULT_FORM: LeagueForm = useMemo(() => {
     const teams =
-      initialLeague?.teams ??
+      initialLeague?.teams?.length ??
       parseTeamsFromDescription(initialLeague?.description) ??
       12;
 

@@ -43,7 +43,8 @@ export default function LeagueDetailPage({ leagueId }: { leagueId: string }) {
 
   const league = data?.data;
   if (!league) return <Text>League not found</Text>;
-  const teams = league.teams ?? parseTeamsFromDescription(league.description);
+  const teamCount =
+    league.teams?.length ?? parseTeamsFromDescription(league.description);
   const leagueIdToDelete = league._id;
 
   async function handleDelete() {
@@ -92,7 +93,7 @@ export default function LeagueDetailPage({ leagueId }: { leagueId: string }) {
               </Tr>
               <Tr>
                 <Td>Teams</Td>
-                <Td>{teams ?? '-'}</Td>
+                <Td>{teamCount ?? '-'}</Td>
               </Tr>
               <Tr>
                 <Td>Draft Type</Td>
@@ -132,6 +133,34 @@ export default function LeagueDetailPage({ leagueId }: { leagueId: string }) {
                       </Tr>
                     ),
                   )}
+                </Tbody>
+              </Table>
+            </TableContainer>
+          </Box>
+        ) : null}
+
+        {league.teams?.length ? (
+          <Box>
+            <Heading size="md" mb={2}>
+              Teams
+            </Heading>
+            <TableContainer borderWidth="1px" borderRadius="md">
+              <Table size="sm">
+                <Thead>
+                  <Tr>
+                    <Th>Team ID</Th>
+                    <Th>Name</Th>
+                    <Th isNumeric>Current Budget</Th>
+                  </Tr>
+                </Thead>
+                <Tbody>
+                  {league.teams.map(([teamId, teamName, currentBudget]) => (
+                    <Tr key={teamId}>
+                      <Td>{teamId}</Td>
+                      <Td>{teamName}</Td>
+                      <Td isNumeric>{`$${currentBudget}`}</Td>
+                    </Tr>
+                  ))}
                 </Tbody>
               </Table>
             </TableContainer>
