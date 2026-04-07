@@ -185,4 +185,46 @@ describe('LeagueDetailPage', () => {
       ['player-2', 'team-2', 45],
     ]);
   });
+
+  it('persists a non-zero edited price for a slot with no existing taken player', async () => {
+    mockLeague = {
+      _id: 'league-999',
+      externalId: 'custom-league-999',
+      name: 'Empty Team League',
+      teams: [['team-1', 'Alpha', 260]],
+      taken_players: [],
+      totalBudget: 260,
+      draftType: 'auction',
+      rosterSlots: {
+        C: 1,
+        '1B': 0,
+        '2B': 0,
+        '3B': 0,
+        SS: 0,
+        OF: 0,
+        DH: 0,
+        SP: 0,
+        RP: 0,
+        UTIL: 0,
+        BENCH: 0,
+      },
+    };
+
+    render(
+      <ChakraProvider>
+        <LeagueDetailPage leagueId="league-999" />
+      </ChakraProvider>,
+    );
+
+    const priceInput = screen.getByRole('spinbutton') as HTMLInputElement;
+    fireEvent.change(priceInput, { target: { value: '25' } });
+    fireEvent.click(screen.getByRole('button', { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(upsertMutateAsyncMock).toHaveBeenCalledTimes(1);
+    });
+
+    const args = upsertMutateAsyncMock.mock.calls[0][0];
+    expect(args.input.takenPlayers).toEqual([['', 'team-1', 25]]);
+  });
 });

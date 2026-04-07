@@ -101,7 +101,7 @@ export default function LeagueDetailPage({ leagueId }: { leagueId: string }) {
   ): TakenPlayer[] {
     let teamPlayerIndex = 0;
 
-    return currentTakenPlayers.map((takenPlayer) => {
+    const updatedTakenPlayers = currentTakenPlayers.map((takenPlayer) => {
       const [playerId, takenPlayerTeamId, price] = takenPlayer;
       if (takenPlayerTeamId !== teamId) return takenPlayer;
 
@@ -109,6 +109,17 @@ export default function LeagueDetailPage({ leagueId }: { leagueId: string }) {
       teamPlayerIndex += 1;
       return [playerId, teamId, nextPrice];
     });
+
+    const existingTeamPlayers = currentTakenPlayers.filter(
+      ([, takenPlayerTeamId]) => takenPlayerTeamId === teamId,
+    );
+
+    const appendedRows = prices
+      .slice(existingTeamPlayers.length)
+      .filter((price) => price > 0)
+      .map((price) => ['', teamId, price] as TakenPlayer);
+
+    return [...updatedTakenPlayers, ...appendedRows];
   }
 
   async function saveTakenPlayers(nextTakenPlayers: TakenPlayer[]) {
