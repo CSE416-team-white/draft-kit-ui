@@ -9,9 +9,11 @@ import {
 import { ChakraProvider } from '@chakra-ui/react';
 import type { ReactNode } from 'react';
 import LeagueDetailPage from './leagueDetailPage';
+import type { League } from './types/leagues.types';
 
 const pushMock = vi.fn();
 const deleteMutateAsyncMock = vi.fn();
+let mockLeague: League;
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: pushMock }),
@@ -28,34 +30,7 @@ vi.mock('./hooks/useLeague', () => ({
     isLoading: false,
     error: null,
     data: {
-      data: {
-        _id: 'league-123',
-        externalId: 'custom-league-123',
-        name: 'My League',
-        teams: [
-          ['team-1', 'Alpha', 240],
-          ['team-2', 'Beta', 215],
-        ],
-        taken_players: [
-          ['player-1', 'team-1', 20],
-          ['player-2', 'team-2', 45],
-        ],
-        totalBudget: 260,
-        draftType: 'auction',
-        rosterSlots: {
-          C: 1,
-          '1B': 1,
-          '2B': 1,
-          '3B': 1,
-          SS: 1,
-          OF: 3,
-          DH: 0,
-          SP: 5,
-          RP: 2,
-          UTIL: 0,
-          BENCH: 0,
-        },
-      },
+      data: mockLeague,
     },
   }),
 }));
@@ -75,6 +50,34 @@ vi.mock('./components/UpsertLeagueModal', () => ({
 describe('LeagueDetailPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockLeague = {
+      _id: 'league-123',
+      externalId: 'custom-league-123',
+      name: 'My League',
+      teams: [
+        ['team-1', 'Alpha', 240],
+        ['team-2', 'Beta', 215],
+      ],
+      taken_players: [
+        ['player-1', 'team-1', 20],
+        ['player-2', 'team-2', 45],
+      ],
+      totalBudget: 260,
+      draftType: 'auction',
+      rosterSlots: {
+        C: 1,
+        '1B': 1,
+        '2B': 1,
+        '3B': 1,
+        SS: 1,
+        OF: 3,
+        DH: 0,
+        SP: 5,
+        RP: 2,
+        UTIL: 0,
+        BENCH: 0,
+      },
+    };
   });
 
   it('confirms and deletes a league, then navigates back to leagues list', async () => {
@@ -99,7 +102,7 @@ describe('LeagueDetailPage', () => {
     });
   });
 
-  it('renders team budgets from the league teams array', () => {
+  it('renders the team table component for each league team', () => {
     render(
       <ChakraProvider>
         <LeagueDetailPage leagueId="league-123" />
@@ -108,7 +111,43 @@ describe('LeagueDetailPage', () => {
 
     expect(screen.getByText('Alpha')).toBeTruthy();
     expect(screen.getByText('Beta')).toBeTruthy();
-    expect(screen.getByText('$240')).toBeTruthy();
-    expect(screen.getByText('$215')).toBeTruthy();
+    expect(screen.getByText('Budget: $240')).toBeTruthy();
+    expect(screen.getByText('Budget: $215')).toBeTruthy();
+    expect(screen.getByText('player-1')).toBeTruthy();
+    expect(screen.getByText('player-2')).toBeTruthy();
+  });
+
+  it('renders placeholder team tables up to the league team count', () => {
+    mockLeague = {
+      _id: 'league-456',
+      externalId: 'custom-league-456',
+      name: 'Fallback League',
+      description: '3 teams',
+      totalBudget: 260,
+      draftType: 'auction',
+      rosterSlots: {
+        C: 1,
+        '1B': 0,
+        '2B': 0,
+        '3B': 0,
+        SS: 0,
+        OF: 0,
+        DH: 0,
+        SP: 0,
+        RP: 0,
+        UTIL: 0,
+        BENCH: 0,
+      },
+    };
+
+    render(
+      <ChakraProvider>
+        <LeagueDetailPage leagueId="league-456" />
+      </ChakraProvider>,
+    );
+
+    expect(screen.getByText('Team 1')).toBeTruthy();
+    expect(screen.getByText('Team 2')).toBeTruthy();
+    expect(screen.getByText('Team 3')).toBeTruthy();
   });
 });

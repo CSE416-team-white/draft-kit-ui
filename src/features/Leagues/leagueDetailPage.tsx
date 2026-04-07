@@ -21,14 +21,32 @@ import {
   Thead,
   TableContainer,
   Button,
+  SimpleGrid,
   useDisclosure,
 } from '@chakra-ui/react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import LeagueTeamTable from './components/LeagueTeamTable';
 import { useLeague } from './hooks/useLeague';
 import { useDeleteLeague } from './hooks/useDeleteLeague';
 import UpsertLeagueModal from './components/UpsertLeagueModal';
 import { parseTeamsFromDescription } from './utils/leagueForm';
+import type { LeagueTeam } from './types/leagues.types';
+
+function buildDisplayTeams(
+  teams: LeagueTeam[] | undefined,
+  teamCount: number | undefined,
+  startingBudget: number,
+): LeagueTeam[] {
+  if (!teamCount || teamCount < 1) return teams ?? [];
+
+  return Array.from({ length: teamCount }, (_, index) => {
+    const existingTeam = teams?.[index];
+    return (
+      existingTeam ?? [`team-${index + 1}`, `Team ${index + 1}`, startingBudget]
+    );
+  });
+}
 
 export default function LeagueDetailPage({ leagueId }: { leagueId: string }) {
   const { data, isLoading, error } = useLeague(leagueId);
@@ -46,6 +64,11 @@ export default function LeagueDetailPage({ leagueId }: { leagueId: string }) {
   const teamCount =
     league.teams?.length ?? parseTeamsFromDescription(league.description);
   const leagueIdToDelete = league._id;
+  const displayTeams = buildDisplayTeams(
+    league.teams,
+    teamCount,
+    league.totalBudget ?? 0,
+  );
 
   async function handleDelete() {
     try {
@@ -111,59 +134,34 @@ export default function LeagueDetailPage({ leagueId }: { leagueId: string }) {
           </Table>
         </TableContainer>
 
-        {league.rosterSlots ? (
-          <Box>
-            <Heading size="md" mb={2}>
-              Roster Slots
-            </Heading>
-            <TableContainer borderWidth="1px" borderRadius="md">
-              <Table size="sm">
-                <Thead>
-                  <Tr>
-                    <Th>Position</Th>
-                    <Th isNumeric>Slots</Th>
-                  </Tr>
-                </Thead>
-                <Tbody>
-                  {Object.entries(league.rosterSlots).map(
-                    ([position, slots]) => (
-                      <Tr key={position}>
-                        <Td>{position}</Td>
-                        <Td isNumeric>{slots}</Td>
-                      </Tr>
-                    ),
-                  )}
-                </Tbody>
-              </Table>
-            </TableContainer>
-          </Box>
-        ) : null}
-
-        {league.teams?.length ? (
+        {displayTeams.length ? (
           <Box>
             <Heading size="md" mb={2}>
               Teams
             </Heading>
-            <TableContainer borderWidth="1px" borderRadius="md">
-              <Table size="sm">
-                <Thead>
-                  <Tr>
-                    <Th>Team ID</Th>
-                    <Th>Name</Th>
-                    <Th isNumeric>Current Budget</Th>
-                  </Tr>
-                </Thead>
-                <Tbody>
-                  {league.teams.map(([teamId, teamName, currentBudget]) => (
-                    <Tr key={teamId}>
-                      <Td>{teamId}</Td>
-                      <Td>{teamName}</Td>
-                      <Td isNumeric>{`$${currentBudget}`}</Td>
-                    </Tr>
-                  ))}
-                </Tbody>
-              </Table>
-            </TableContainer>
+            <SimpleGrid
+              columns={{ base: 1, xl: 3 }}
+              spacing={4}
+              alignItems="start"
+            >
+              {displayTeams.map((team) => {
+                const [teamId] = team;
+                const takenPlayersForTeam =
+                  league.taken_players?.filter(
+                    ([, takenPlayerTeamId]) => takenPlayerTeamId === teamId,
+                  ) ?? [];
+
+                return (
+                  <LeagueTeamTable
+                    key={teamId}
+                    team={team}
+                    rosterSlots={league.rosterSlots}
+                    takenPlayers={takenPlayersForTeam}
+                    startingBudget={league.totalBudget ?? 0}
+                  />
+                );
+              })}
+            </SimpleGrid>
           </Box>
         ) : null}
       </Stack>
