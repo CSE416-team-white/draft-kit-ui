@@ -1,9 +1,12 @@
 'use client';
 
+import { useEffect, useMemo, useState } from 'react';
 import {
   Box,
+  Button,
   Flex,
   Heading,
+  Input,
   Table,
   TableContainer,
   Tbody,
@@ -25,13 +28,15 @@ type LeagueTeamTableProps = {
   rosterSlots?: RosterSlots;
   takenPlayers?: TakenPlayer[];
   startingBudget: number;
+  onSaveChanges?: (prices: number[]) => void;
+  isSaving?: boolean;
 };
 
 type TeamTableRow = {
   rowId: string;
   position: string;
   playerName: string;
-  price: number;
+  price: string;
 };
 
 function buildTeamRows(
@@ -49,17 +54,22 @@ function buildTeamRows(
         rowId: `${position}-${slotIndex}`,
         position,
         playerName: player?.[0] ?? '',
-        price: player?.[2] ?? 0,
+        price: String(player?.[2] ?? 0),
       };
     }),
   );
 }
 
-function calculateCurrentBudget(
+function parsePrice(value: string): number {
+  const parsed = Number.parseInt(value, 10);
+  return Number.isNaN(parsed) ? 0 : parsed;
+}
+
+function calculateCurrentBudgetFromRows(
   startingBudget: number,
-  takenPlayers: TakenPlayer[],
+  rows: TeamTableRow[],
 ): number {
-  const spent = takenPlayers.reduce((sum, [, , price]) => sum + price, 0);
+  const spent = rows.reduce((sum, row) => sum + parsePrice(row.price), 0);
   return Math.max(0, startingBudget - spent);
 }
 
@@ -68,10 +78,48 @@ export default function LeagueTeamTable({
   rosterSlots = DEFAULT_ROSTER_SLOTS,
   takenPlayers = [],
   startingBudget,
+  onSaveChanges,
+  isSaving = false,
 }: LeagueTeamTableProps) {
   const [, teamName] = team;
-  const rows = buildTeamRows(rosterSlots, takenPlayers);
-  const currentBudget = calculateCurrentBudget(startingBudget, takenPlayers);
+  const propRows = useMemo(
+    () => buildTeamRows(rosterSlots, takenPlayers),
+    [rosterSlots, takenPlayers],
+  );
+  const [localRows, setLocalRows] = useState(propRows);
+
+  useEffect(() => {
+    setLocalRows(propRows);
+  }, [propRows]);
+
+  const rows = localRows;
+  const currentBudget = calculateCurrentBudgetFromRows(startingBudget, rows);
+  const isDirty = rows.some(
+    (row, index) => row.price !== propRows[index]?.price,
+  );
+
+  function handleLocalPriceChange(rowIndex: number, value: string) {
+    if (value !== '' && !/^\d+$/.test(value)) return;
+
+    setLocalRows((prev) => {
+      const parsedValue = value === '' ? 0 : parsePrice(value);
+      const spentWithoutRow = prev.reduce((sum, row, index) => {
+        if (index === rowIndex) return sum;
+        return sum + parsePrice(row.price);
+      }, 0);
+      const maxAllowed = Math.max(0, startingBudget - spentWithoutRow);
+
+      if (parsedValue > maxAllowed) return prev;
+
+      return prev.map((row, index) =>
+        index === rowIndex ? { ...row, price: value } : row,
+      );
+    });
+  }
+
+  function handleSaveChanges() {
+    onSaveChanges?.(rows.map((row) => parsePrice(row.price)));
+  }
 
   return (
     <Box
@@ -113,12 +161,46 @@ export default function LeagueTeamTable({
               <Tr key={row.rowId}>
                 <Td>{row.position}</Td>
                 <Td>{row.playerName || '-'}</Td>
-                <Td isNumeric>{row.price}</Td>
+                <Td isNumeric>
+                  <Input
+                    type="number"
+                    min={0}
+                    max={startingBudget}
+                    value={row.price}
+                    onChange={(e) => {
+                      const rowIndex = rows.findIndex(
+                        (candidate) => candidate.rowId === row.rowId,
+                      );
+                      if (rowIndex < 0) return;
+
+                      handleLocalPriceChange(rowIndex, e.target.value);
+                    }}
+                    textAlign="right"
+                    size="sm"
+                    width="88px"
+                    marginLeft="auto"
+                    isDisabled={isSaving}
+                  />
+                </Td>
               </Tr>
             ))}
           </Tbody>
         </Table>
       </TableContainer>
+
+      {onSaveChanges ? (
+        <Box px={4} py={3} borderTopWidth="1px" bg="gray.50">
+          <Button
+            size="sm"
+            colorScheme="blue"
+            onClick={handleSaveChanges}
+            isLoading={isSaving}
+            isDisabled={!isDirty}
+          >
+            Save Changes
+          </Button>
+        </Box>
+      ) : null}
     </Box>
   );
 }

@@ -13,6 +13,7 @@ import type { League } from './types/leagues.types';
 
 const pushMock = vi.fn();
 const deleteMutateAsyncMock = vi.fn();
+const upsertMutateAsyncMock = vi.fn();
 let mockLeague: League;
 
 vi.mock('next/navigation', () => ({
@@ -43,6 +44,15 @@ vi.mock('./hooks/useDeleteLeague', () => ({
   }),
 }));
 
+vi.mock('./hooks/useUpsertLeague', () => ({
+  useUpsertLeague: () => ({
+    mutateAsync: upsertMutateAsyncMock,
+    isPending: false,
+    isError: false,
+    reset: vi.fn(),
+  }),
+}));
+
 vi.mock('./components/UpsertLeagueModal', () => ({
   default: () => null,
 }));
@@ -50,6 +60,7 @@ vi.mock('./components/UpsertLeagueModal', () => ({
 describe('LeagueDetailPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    upsertMutateAsyncMock.mockResolvedValue({});
     mockLeague = {
       _id: 'league-123',
       externalId: 'custom-league-123',
@@ -149,5 +160,29 @@ describe('LeagueDetailPage', () => {
     expect(screen.getByText('Team 1')).toBeTruthy();
     expect(screen.getByText('Team 2')).toBeTruthy();
     expect(screen.getByText('Team 3')).toBeTruthy();
+  });
+
+  it('saves edited prices back to the league object from a team table save button', async () => {
+    render(
+      <ChakraProvider>
+        <LeagueDetailPage leagueId="league-123" />
+      </ChakraProvider>,
+    );
+
+    const priceInputs = screen.getAllByRole('spinbutton') as HTMLInputElement[];
+    fireEvent.change(priceInputs[0], { target: { value: '30' } });
+    fireEvent.click(
+      screen.getAllByRole('button', { name: /save changes/i })[0],
+    );
+
+    await waitFor(() => {
+      expect(upsertMutateAsyncMock).toHaveBeenCalledTimes(1);
+    });
+
+    const args = upsertMutateAsyncMock.mock.calls[0][0];
+    expect(args.input.takenPlayers).toEqual([
+      ['player-1', 'team-1', 30],
+      ['player-2', 'team-2', 45],
+    ]);
   });
 });

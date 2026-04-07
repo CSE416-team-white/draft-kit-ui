@@ -43,6 +43,7 @@ export type CreateLeagueInput = {
   draftType: 'auction';
   rosterSlots: RosterSlots;
   totalBudget: number;
+  takenPlayers?: TakenPlayer[];
 };
 
 export interface CreateLeagueResponse {

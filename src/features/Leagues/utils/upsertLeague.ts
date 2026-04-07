@@ -67,7 +67,8 @@ export async function upsertLeague(
   }
 
   const externalId = existingLeague?.externalId ?? toExternalId(input.name);
-  const takenPlayers = existingLeague?.taken_players ?? [];
+  const takenPlayers =
+    input.takenPlayers ?? existingLeague?.taken_players ?? [];
   const teams = buildLeagueTeams(
     input.teams,
     input.totalBudget,
