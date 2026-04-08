@@ -31,6 +31,7 @@ export const STORAGE_KEYS = {
   AUTH_TOKEN: 'auth_token',
   USER_PREFERENCES: 'user_preferences',
   DRAFT_STATE: 'draft_state',
+  PLAYERS_SYNC_RUN_ID: 'players_sync_run_id',
 } as const;
 
 // Routes

@@ -65,6 +65,24 @@ class ApiClient {
     return url.toString();
   }
 
+  private async parseResponse<T>(response: Response): Promise<T> {
+    if (response.status === 204) {
+      return null as T;
+    }
+
+    const contentType = response.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+      return null as T;
+    }
+
+    const text = await response.text();
+    if (!text) {
+      return null as T;
+    }
+
+    return JSON.parse(text) as T;
+  }
+
   async get<T>(endpoint: string, options?: RequestOptions): Promise<T> {
     const url = this.buildURL(endpoint, options?.params);
     const response = await fetch(url, {
@@ -77,7 +95,7 @@ class ApiClient {
       throw new Error(`API Error: ${response.statusText}`);
     }
 
-    return response.json();
+    return this.parseResponse<T>(response);
   }
 
   async post<T>(
@@ -97,7 +115,7 @@ class ApiClient {
       throw new Error(`API Error: ${response.statusText}`);
     }
 
-    return response.json();
+    return this.parseResponse<T>(response);
   }
 
   async put<T>(
@@ -117,7 +135,7 @@ class ApiClient {
       throw new Error(`API Error: ${response.statusText}`);
     }
 
-    return response.json();
+    return this.parseResponse<T>(response);
   }
 
   async delete<T>(endpoint: string, options?: RequestOptions): Promise<T> {
@@ -132,7 +150,7 @@ class ApiClient {
       throw new Error(`API Error: ${response.statusText}`);
     }
 
-    return response.json();
+    return this.parseResponse<T>(response);
   }
 }
 

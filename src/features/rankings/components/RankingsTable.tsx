@@ -64,7 +64,11 @@ type PlayersResponse = {
   };
 };
 
-export default function RankingsTable() {
+type RankingsTableProps = {
+  refreshKey?: number;
+};
+
+export default function RankingsTable({ refreshKey = 0 }: RankingsTableProps) {
   const [allPlayers, setAllPlayers] = useState<Player[]>([]);
   const [players, setPlayers] = useState<Player[]>([]);
   const [positions, setPositions] = useState<string[]>([]);
@@ -149,7 +153,7 @@ export default function RankingsTable() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [refreshKey]);
 
   useEffect(() => {
     const normalizedSearch = appliedSearch.trim().toLowerCase();
