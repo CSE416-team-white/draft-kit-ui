@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
   Badge,
   Box,
@@ -11,28 +11,9 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react';
-import { apiClient } from '@/shared/utils/api-client';
-
-type Player = {
-  _id: string;
-  name: string;
-  team: string;
-  positions: string[];
-  playerType?: string;
-  league?: string;
-  injuryStatus: string;
-  active?: boolean;
-  age?: number;
-  batSide?: string;
-  pitchHand?: string;
-};
-
-type PlayersResponse = {
-  data?: Player[];
-  pagination?: {
-    totalPages?: number;
-  };
-};
+import { useTopPlayers } from '../hooks/useTopPlayers';
+import type { Player } from '../types/notebook.types';
+import { filterTopPlayers } from '../utils/playerSearch';
 
 type TopPlayersPanelProps = {
   onOpenPlayer: (player: Player) => void;
@@ -41,71 +22,9 @@ type TopPlayersPanelProps = {
 export default function TopPlayersPanel({
   onOpenPlayer,
 }: TopPlayersPanelProps) {
-  const [players, setPlayers] = useState<Player[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [isLoadingPlayers, setIsLoadingPlayers] = useState(true);
-  const [playersError, setPlayersError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let active = true;
-
-    async function loadPlayers() {
-      try {
-        setIsLoadingPlayers(true);
-        setPlayersError(null);
-
-        const firstPage = await apiClient.get<PlayersResponse>('/api/players', {
-          params: { limit: 100, page: 1 },
-        });
-        const firstBatch = firstPage.data ?? [];
-        const totalPages = firstPage.pagination?.totalPages ?? 1;
-        const pageRequests: Promise<PlayersResponse>[] = [];
-
-        for (let page = 2; page <= totalPages; page += 1) {
-          pageRequests.push(
-            apiClient.get<PlayersResponse>('/api/players', {
-              params: { limit: 100, page },
-            }),
-          );
-        }
-
-        const remainingPages = await Promise.all(pageRequests);
-        const allPlayers = [
-          ...firstBatch,
-          ...remainingPages.flatMap((page) => page.data ?? []),
-        ];
-
-        if (!active) {
-          return;
-        }
-
-        setPlayers(allPlayers);
-      } catch {
-        if (active) {
-          setPlayersError('Unable to load players');
-        }
-      } finally {
-        if (active) {
-          setIsLoadingPlayers(false);
-        }
-      }
-    }
-
-    loadPlayers();
-
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  const normalizedSearch = searchTerm.trim().toLowerCase();
-  const displayedPlayers = players
-    .filter((player) =>
-      normalizedSearch
-        ? player.name.toLowerCase().includes(normalizedSearch)
-        : true,
-    )
-    .slice(0, 4);
+  const { players, isLoadingPlayers, playersError } = useTopPlayers();
+  const displayedPlayers = filterTopPlayers(players, searchTerm);
 
   return (
     <Box>

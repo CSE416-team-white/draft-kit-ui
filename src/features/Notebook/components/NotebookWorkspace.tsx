@@ -7,21 +7,14 @@ import {
   type MouseEvent as ReactMouseEvent,
 } from 'react';
 import { Badge, Box, Button, Flex, Text, Textarea } from '@chakra-ui/react';
+import type { NotebookWindowRect, Player } from '../types/notebook.types';
+import {
+  NOTEBOOK_WINDOW_DEFAULT_HEIGHT,
+  NOTEBOOK_WINDOW_DEFAULT_WIDTH,
+  NOTEBOOK_WINDOW_MIN_HEIGHT,
+  NOTEBOOK_WINDOW_MIN_WIDTH,
+} from '../utils/notebookWindow';
 import TopPlayersPanel from './TopPlayersPanel';
-
-type Player = {
-  _id: string;
-  name: string;
-  team: string;
-  positions: string[];
-  playerType?: string;
-  league?: string;
-  injuryStatus: string;
-  active?: boolean;
-  age?: number;
-  batSide?: string;
-  pitchHand?: string;
-};
 
 type NotebookWorkspaceProps = {
   selectedNotebookId: number | null;
@@ -46,11 +39,11 @@ export default function NotebookWorkspace({
   onCloseNotebook,
   onOpenPlayerNotebook,
 }: NotebookWorkspaceProps) {
-  const [windowRect, setWindowRect] = useState({
+  const [windowRect, setWindowRect] = useState<NotebookWindowRect>({
     x: 0,
     y: 0,
-    width: 520,
-    height: 500,
+    width: NOTEBOOK_WINDOW_DEFAULT_WIDTH,
+    height: NOTEBOOK_WINDOW_DEFAULT_HEIGHT,
   });
   const dragStateRef = useRef<{
     mode: 'move' | 'resize' | null;
@@ -93,8 +86,8 @@ export default function NotebookWorkspace({
       return;
     }
 
-    const width = 520;
-    const height = 500;
+    const width = NOTEBOOK_WINDOW_DEFAULT_WIDTH;
+    const height = NOTEBOOK_WINDOW_DEFAULT_HEIGHT;
 
     setWindowRect({
       width,
@@ -128,11 +121,11 @@ export default function NotebookWorkspace({
           ...current,
           width: Math.max(
             dragState.startWidth + event.clientX - dragState.startX,
-            420,
+            NOTEBOOK_WINDOW_MIN_WIDTH,
           ),
           height: Math.max(
             dragState.startHeight + event.clientY - dragState.startY,
-            420,
+            NOTEBOOK_WINDOW_MIN_HEIGHT,
           ),
         }));
       }

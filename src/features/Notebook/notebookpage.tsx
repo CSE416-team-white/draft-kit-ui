@@ -2,27 +2,12 @@
 
 import { useState } from 'react';
 import { Box, Flex } from '@chakra-ui/react';
+import type { Notebook, Player } from './types/notebook.types';
 import NotebookListPanel from './components/NotebookListPanel';
 import NotebookWorkspace from './components/NotebookWorkspace';
 
-type Player = {
-  _id: string;
-  name: string;
-  team: string;
-  positions: string[];
-  playerType?: string;
-  league?: string;
-  injuryStatus: string;
-  active?: boolean;
-  age?: number;
-  batSide?: string;
-  pitchHand?: string;
-};
-
 export default function NotebookPage() {
-  const [notebooks, setNotebooks] = useState<
-    Array<{ id: number; name: string; content: string }>
-  >([]);
+  const [notebooks, setNotebooks] = useState<Notebook[]>([]);
   const [selectedNotebookId, setSelectedNotebookId] = useState<number | null>(
     null,
   );
