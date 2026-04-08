@@ -5,6 +5,20 @@ import { Box, Flex } from '@chakra-ui/react';
 import NotebookListPanel from './components/NotebookListPanel';
 import NotebookWorkspace from './components/NotebookWorkspace';
 
+type Player = {
+  _id: string;
+  name: string;
+  team: string;
+  positions: string[];
+  playerType?: string;
+  league?: string;
+  injuryStatus: string;
+  active?: boolean;
+  age?: number;
+  batSide?: string;
+  pitchHand?: string;
+};
+
 export default function NotebookPage() {
   const [notebooks, setNotebooks] = useState<
     Array<{ id: number; name: string; content: string }>
@@ -16,6 +30,7 @@ export default function NotebookPage() {
   const [selectedPlayerName, setSelectedPlayerName] = useState<string | null>(
     null,
   );
+  const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
 
   const addNotebook = () => {
     const newNotebook = {
@@ -26,6 +41,7 @@ export default function NotebookPage() {
 
     setNotebooks((current) => [...current, newNotebook]);
     setSelectedPlayerName(null);
+    setSelectedPlayer(null);
     setSelectedNotebookId(newNotebook.id);
   };
 
@@ -52,9 +68,10 @@ export default function NotebookPage() {
     }));
   };
 
-  const openPlayerNotebook = (playerName: string) => {
+  const openPlayerNotebook = (player: Player) => {
     setSelectedNotebookId(null);
-    setSelectedPlayerName(playerName);
+    setSelectedPlayerName(player.name);
+    setSelectedPlayer(player);
   };
 
   const selectedNotebook =
@@ -74,9 +91,11 @@ export default function NotebookPage() {
           onNotebookContentChange={updateNotebookContent}
           onPlayerContentChange={updatePlayerContent}
           selectedPlayerName={selectedPlayerName}
+          selectedPlayer={selectedPlayer}
           onCloseNotebook={() => {
             setSelectedNotebookId(null);
             setSelectedPlayerName(null);
+            setSelectedPlayer(null);
           }}
           onOpenPlayerNotebook={openPlayerNotebook}
         />
@@ -87,6 +106,7 @@ export default function NotebookPage() {
           onRenameNotebook={renameNotebook}
           onOpenNotebook={(id) => {
             setSelectedPlayerName(null);
+            setSelectedPlayer(null);
             setSelectedNotebookId(id);
           }}
         />

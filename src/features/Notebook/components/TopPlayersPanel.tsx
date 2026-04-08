@@ -6,6 +6,7 @@ import {
   Box,
   Flex,
   Heading,
+  Input,
   Spinner,
   Text,
   VStack,
@@ -17,21 +18,31 @@ type Player = {
   name: string;
   team: string;
   positions: string[];
+  playerType?: string;
+  league?: string;
   injuryStatus: string;
+  active?: boolean;
+  age?: number;
+  batSide?: string;
+  pitchHand?: string;
 };
 
 type PlayersResponse = {
   data?: Player[];
+  pagination?: {
+    totalPages?: number;
+  };
 };
 
 type TopPlayersPanelProps = {
-  onOpenPlayer: (playerName: string) => void;
+  onOpenPlayer: (player: Player) => void;
 };
 
 export default function TopPlayersPanel({
   onOpenPlayer,
 }: TopPlayersPanelProps) {
   const [players, setPlayers] = useState<Player[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [isLoadingPlayers, setIsLoadingPlayers] = useState(true);
   const [playersError, setPlayersError] = useState<string | null>(null);
 
@@ -43,15 +54,32 @@ export default function TopPlayersPanel({
         setIsLoadingPlayers(true);
         setPlayersError(null);
 
-        const response = await apiClient.get<PlayersResponse>('/api/players', {
-          params: { limit: 4, page: 1 },
+        const firstPage = await apiClient.get<PlayersResponse>('/api/players', {
+          params: { limit: 100, page: 1 },
         });
+        const firstBatch = firstPage.data ?? [];
+        const totalPages = firstPage.pagination?.totalPages ?? 1;
+        const pageRequests: Promise<PlayersResponse>[] = [];
+
+        for (let page = 2; page <= totalPages; page += 1) {
+          pageRequests.push(
+            apiClient.get<PlayersResponse>('/api/players', {
+              params: { limit: 100, page },
+            }),
+          );
+        }
+
+        const remainingPages = await Promise.all(pageRequests);
+        const allPlayers = [
+          ...firstBatch,
+          ...remainingPages.flatMap((page) => page.data ?? []),
+        ];
 
         if (!active) {
           return;
         }
 
-        setPlayers(response.data?.slice(0, 4) ?? []);
+        setPlayers(allPlayers);
       } catch {
         if (active) {
           setPlayersError('Unable to load players');
@@ -70,11 +98,28 @@ export default function TopPlayersPanel({
     };
   }, []);
 
+  const normalizedSearch = searchTerm.trim().toLowerCase();
+  const displayedPlayers = players
+    .filter((player) =>
+      normalizedSearch
+        ? player.name.toLowerCase().includes(normalizedSearch)
+        : true,
+    )
+    .slice(0, 4);
+
   return (
     <Box>
       <Heading as="h2" size="md" mb={4}>
         Top Players
       </Heading>
+
+      <Input
+        mb={4}
+        placeholder="Search top players"
+        value={searchTerm}
+        onChange={(event) => setSearchTerm(event.target.value)}
+        aria-label="Search top players"
+      />
 
       {isLoadingPlayers ? (
         <Flex justify="center" py={4}>
@@ -90,7 +135,7 @@ export default function TopPlayersPanel({
 
       {!isLoadingPlayers && !playersError ? (
         <VStack align="stretch" spacing={3}>
-          {players.map((player, index) => (
+          {displayedPlayers.map((player, index) => (
             <Box
               key={player._id}
               borderWidth="1px"
@@ -103,7 +148,7 @@ export default function TopPlayersPanel({
               cursor="pointer"
               _hover={{ borderColor: 'green.400', boxShadow: 'md' }}
               transition="all 0.15s ease"
-              onClick={() => onOpenPlayer(player.name)}
+              onClick={() => onOpenPlayer(player)}
             >
               <Flex align="center" justify="space-between" gap={3}>
                 <Text fontSize="sm" fontWeight="bold" color="gray.500">
@@ -130,6 +175,11 @@ export default function TopPlayersPanel({
               </Text>
             </Box>
           ))}
+          {displayedPlayers.length === 0 ? (
+            <Text fontSize="sm" color="gray.500">
+              No players found.
+            </Text>
+          ) : null}
         </VStack>
       ) : null}
     </Box>
