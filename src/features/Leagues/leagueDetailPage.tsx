@@ -84,13 +84,19 @@ export default function LeagueDetailPage({ leagueId }: { leagueId: string }) {
   if (isLoading) return <Spinner />;
   if (error) return <Text>Unable to load league</Text>;
   if (!league) return <Text>League not found</Text>;
+  const currentLeague = league;
   const teamCount =
-    league.teams?.length ?? parseTeamsFromDescription(league.description);
-  const leagueIdToDelete = league._id;
+    currentLeague.teams?.length ??
+    parseTeamsFromDescription(currentLeague.description);
+  const leagueIdToDelete = currentLeague._id;
   const displayTeams =
     editedTeams.length > 0
       ? editedTeams
-      : buildDisplayTeams(league.teams, teamCount, league.totalBudget ?? 0);
+      : buildDisplayTeams(
+          currentLeague.teams,
+          teamCount,
+          currentLeague.totalBudget ?? 0,
+        );
 
   async function handleDelete() {
     try {
@@ -148,10 +154,10 @@ export default function LeagueDetailPage({ leagueId }: { leagueId: string }) {
     try {
       await upsertLeagueMutation.mutateAsync({
         input: {
-          name: league.name,
+          name: currentLeague.name,
           teams: teamCount ?? displayTeams.length,
-          draftType: (league.draftType ?? 'auction') as 'auction',
-          rosterSlots: league.rosterSlots ?? {
+          draftType: (currentLeague.draftType ?? 'auction') as 'auction',
+          rosterSlots: currentLeague.rosterSlots ?? {
             C: 1,
             '1B': 1,
             '2B': 1,
@@ -164,11 +170,11 @@ export default function LeagueDetailPage({ leagueId }: { leagueId: string }) {
             UTIL: 0,
             BENCH: 0,
           },
-          totalBudget: league.totalBudget ?? 0,
+          totalBudget: currentLeague.totalBudget ?? 0,
           takenPlayers: nextTakenPlayers,
           teamsData: nextTeams,
         },
-        existingLeague: league,
+        existingLeague: currentLeague,
       });
     } catch (err) {
       console.error(err);
