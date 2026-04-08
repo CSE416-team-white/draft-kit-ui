@@ -93,8 +93,8 @@ describe('LeaguesService', () => {
     await service.upsertLeagues([
       {
         externalId: `${testPrefix}-default`,
-        name: 'Default League',
-        description: 'default',
+        name: `${testPrefix} Default League`,
+        description: `${testPrefix} default`,
         format: 'roto',
         draftType: 'auction',
         battingCategories: ['R', 'HR', 'RBI', 'SB', 'AVG'],
@@ -117,8 +117,8 @@ describe('LeaguesService', () => {
       },
       {
         externalId: `${testPrefix}-snake`,
-        name: 'Snake League',
-        description: 'snake',
+        name: `${testPrefix} Snake League`,
+        description: `${testPrefix} snake`,
         format: 'roto',
         draftType: 'snake',
         battingCategories: ['R', 'HR', 'RBI', 'SB', 'AVG'],
@@ -145,6 +145,7 @@ describe('LeaguesService', () => {
       format: 'roto',
       draftType: 'auction',
       isDefault: true,
+      search: testPrefix,
       page: 1,
       limit: 10,
     });
