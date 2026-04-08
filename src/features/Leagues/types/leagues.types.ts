@@ -1,46 +1,108 @@
-export type RosterSlots = {
-  C: number;
-  '1B': number;
-  '2B': number;
-  '3B': number;
-  SS: number;
-  OF: number;
-  DH: number;
-  SP: number;
-  RP: number;
-  UTIL: number;
-  BENCH: number;
-};
+import { z } from 'zod';
 
-export type TakenPlayer = [
-  playerId: string,
-  teamId: string,
-  positionSlot: string,
-  price: number,
-];
+export const RosterSlotsSchema = z.object({
+  C: z.number().int().min(0).default(1),
+  '1B': z.number().int().min(0).default(1),
+  '2B': z.number().int().min(0).default(1),
+  '3B': z.number().int().min(0).default(1),
+  SS: z.number().int().min(0).default(1),
+  OF: z.number().int().min(0).default(3),
+  DH: z.number().int().min(0).default(0),
+  SP: z.number().int().min(0).default(5),
+  RP: z.number().int().min(0).default(2),
+  UTIL: z.number().int().min(0).default(0),
+  BENCH: z.number().int().min(0).default(0),
+});
 
-export type LeagueTeam = [
-  teamId: string,
-  teamName: string,
-  currentBudget: number,
-];
+export const BattingCategorySchema = z.enum([
+  'R',
+  'HR',
+  'RBI',
+  'SB',
+  'AVG',
+  'OBP',
+  'SLG',
+  'OPS',
+  'H',
+  '2B',
+  '3B',
+  'BB',
+  'K',
+]);
 
-export type League = {
+export const PitchingCategorySchema = z.enum([
+  'W',
+  'SV',
+  'K',
+  'ERA',
+  'WHIP',
+  'QS',
+  'IP',
+  'H',
+  'BB',
+  'HR',
+  'L',
+  'HLD',
+  'SV+HLD',
+]);
+
+export const LeagueFormatSchema = z.enum([
+  'roto',
+  'h2h-points',
+  'h2h-category',
+]);
+
+export const DraftTypeSchema = z.enum(['auction', 'snake']);
+
+export const TakenPlayerSchema = z.tuple([
+  z.string(),
+  z.string(),
+  z.string(),
+  z.number().min(0),
+]);
+
+export const LeagueTeamSchema = z.tuple([
+  z.string(),
+  z.string(),
+  z.number().min(0),
+]);
+
+export const LeagueSchema = z.object({
+  externalId: z.string().min(1),
+  name: z.string().min(1).trim(),
+  description: z.string().optional(),
+  format: LeagueFormatSchema,
+  draftType: DraftTypeSchema,
+  battingCategories: z.array(BattingCategorySchema).min(1),
+  pitchingCategories: z.array(PitchingCategorySchema).min(1),
+  rosterSlots: RosterSlotsSchema,
+  totalBudget: z.number().int().min(1).optional(),
+  taken_players: z.array(TakenPlayerSchema).optional(),
+  teams: z.array(LeagueTeamSchema).optional(),
+  isDefault: z.boolean().default(false),
+  categoryWeights: z.record(z.string(), z.number()).optional(),
+});
+
+export const LeagueFiltersSchema = z.object({
+  format: LeagueFormatSchema.optional(),
+  draftType: DraftTypeSchema.optional(),
+  isDefault: z.coerce.boolean().optional(),
+  search: z.string().optional(),
+  page: z.coerce.number().int().positive().optional(),
+  limit: z.coerce.number().int().positive().max(100).optional(),
+});
+
+export type RosterSlots = z.infer<typeof RosterSlotsSchema>;
+export type TakenPlayer = z.infer<typeof TakenPlayerSchema>;
+export type LeagueTeam = z.infer<typeof LeagueTeamSchema>;
+export type LeagueInput = z.infer<typeof LeagueSchema>;
+export type LeagueFilters = z.infer<typeof LeagueFiltersSchema>;
+
+export interface League extends LeagueInput {
   _id: string;
-  externalId?: string;
-  name: string;
-  description?: string;
-  format?: 'roto' | 'h2h-points' | 'h2h-category';
-  draftType?: 'auction' | 'snake';
-  battingCategories?: string[];
-  pitchingCategories?: string[];
-  rosterSlots?: RosterSlots;
-  totalBudget?: number;
-  taken_players?: TakenPlayer[];
-  teams?: LeagueTeam[];
-  isDefault?: boolean;
-  categoryWeights?: Record<string, number>;
-};
+  createdAt?: Date;
+  updatedAt?: Date;
+}
 
 export type CreateLeagueInput = {
   name: string;
