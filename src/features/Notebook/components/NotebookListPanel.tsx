@@ -1,15 +1,11 @@
 'use client';
 
 import { Box, Button, Flex, Heading, VStack } from '@chakra-ui/react';
+import type { NotebookListEntry } from '../types/notebook.types';
 import NotebookListItem from './NotebookListItem';
 
-type Notebook = {
-  id: number;
-  name: string;
-};
-
 type NotebookListPanelProps = {
-  notebooks: Notebook[];
+  notebooks: NotebookListEntry[];
   selectedNotebookId: number | null;
   onAddNotebook: () => void;
   onRenameNotebook: (id: number, name: string) => void;

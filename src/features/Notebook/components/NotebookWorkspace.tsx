@@ -6,14 +6,26 @@ import {
   useState,
   type MouseEvent as ReactMouseEvent,
 } from 'react';
-import { Box, Button, Text, Textarea } from '@chakra-ui/react';
+import { Badge, Box, Button, Flex, Text, Textarea } from '@chakra-ui/react';
+import type { NotebookWindowRect, Player } from '../types/notebook.types';
+import {
+  NOTEBOOK_WINDOW_DEFAULT_HEIGHT,
+  NOTEBOOK_WINDOW_DEFAULT_WIDTH,
+  NOTEBOOK_WINDOW_MIN_HEIGHT,
+  NOTEBOOK_WINDOW_MIN_WIDTH,
+} from '../utils/notebookWindow';
+import TopPlayersPanel from './TopPlayersPanel';
 
 type NotebookWorkspaceProps = {
   selectedNotebookId: number | null;
   selectedNotebookName: string | null;
   selectedNotebookContent: string;
   onNotebookContentChange: (id: number, content: string) => void;
+  onPlayerContentChange: (playerName: string, content: string) => void;
+  selectedPlayerName: string | null;
+  selectedPlayer: Player | null;
   onCloseNotebook: () => void;
+  onOpenPlayerNotebook: (player: Player) => void;
 };
 
 export default function NotebookWorkspace({
@@ -21,13 +33,17 @@ export default function NotebookWorkspace({
   selectedNotebookName,
   selectedNotebookContent,
   onNotebookContentChange,
+  onPlayerContentChange,
+  selectedPlayerName,
+  selectedPlayer,
   onCloseNotebook,
+  onOpenPlayerNotebook,
 }: NotebookWorkspaceProps) {
-  const [windowRect, setWindowRect] = useState({
+  const [windowRect, setWindowRect] = useState<NotebookWindowRect>({
     x: 0,
     y: 0,
-    width: 420,
-    height: 320,
+    width: NOTEBOOK_WINDOW_DEFAULT_WIDTH,
+    height: NOTEBOOK_WINDOW_DEFAULT_HEIGHT,
   });
   const dragStateRef = useRef<{
     mode: 'move' | 'resize' | null;
@@ -70,8 +86,8 @@ export default function NotebookWorkspace({
       return;
     }
 
-    const width = 420;
-    const height = 320;
+    const width = NOTEBOOK_WINDOW_DEFAULT_WIDTH;
+    const height = NOTEBOOK_WINDOW_DEFAULT_HEIGHT;
 
     setWindowRect({
       width,
@@ -105,11 +121,11 @@ export default function NotebookWorkspace({
           ...current,
           width: Math.max(
             dragState.startWidth + event.clientX - dragState.startX,
-            320,
+            NOTEBOOK_WINDOW_MIN_WIDTH,
           ),
           height: Math.max(
             dragState.startHeight + event.clientY - dragState.startY,
-            220,
+            NOTEBOOK_WINDOW_MIN_HEIGHT,
           ),
         }));
       }
@@ -161,7 +177,18 @@ export default function NotebookWorkspace({
         border="2px solid"
         borderColor="gray.200"
         bg="white"
-      />
+        p={6}
+      >
+        <Flex direction="column" gap={6} h="100%">
+          <TopPlayersPanel onOpenPlayer={onOpenPlayerNotebook} />
+          <Box
+            flex="1"
+            borderRadius="md"
+            border="1px dashed"
+            borderColor="gray.200"
+          />
+        </Flex>
+      </Box>
 
       {selectedNotebookName ? (
         <Box position="fixed" inset={0} bg="blackAlpha.200" zIndex={10}>
@@ -213,6 +240,70 @@ export default function NotebookWorkspace({
                 }
                 placeholder="Write notes here..."
               />
+            ) : selectedPlayerName ? (
+              <Flex
+                direction="column"
+                gap={4}
+                h={`calc(${windowRect.height}px - 88px)`}
+              >
+                <Box
+                  borderWidth="1px"
+                  borderColor="gray.200"
+                  borderRadius="md"
+                  bg="gray.50"
+                  p={3}
+                >
+                  <Flex align="center" justify="space-between" gap={3} mb={2}>
+                    <Text fontSize="sm" fontWeight="semibold" color="gray.700">
+                      Player Stats
+                    </Text>
+                    <Badge
+                      colorScheme={
+                        selectedPlayer?.injuryStatus === 'active'
+                          ? 'green'
+                          : 'red'
+                      }
+                      textTransform="capitalize"
+                    >
+                      {selectedPlayer?.injuryStatus ?? 'unknown'}
+                    </Badge>
+                  </Flex>
+                  <Text fontSize="sm" color="gray.600">
+                    Team: {selectedPlayer?.team ?? '-'}
+                  </Text>
+                  <Text fontSize="sm" color="gray.600">
+                    Positions: {selectedPlayer?.positions.join(', ') ?? '-'}
+                  </Text>
+                  <Text fontSize="sm" color="gray.600">
+                    League: {selectedPlayer?.league ?? '-'}
+                  </Text>
+                  <Text fontSize="sm" color="gray.600">
+                    Type: {selectedPlayer?.playerType ?? '-'}
+                  </Text>
+                  <Text fontSize="sm" color="gray.600">
+                    Age: {selectedPlayer?.age ?? '-'}
+                  </Text>
+                  <Text fontSize="sm" color="gray.600">
+                    Bats/Throws:{' '}
+                    {selectedPlayer?.batSide ??
+                      selectedPlayer?.pitchHand ??
+                      '-'}
+                  </Text>
+                </Box>
+                <Textarea
+                  flex="1"
+                  minH="120px"
+                  resize="none"
+                  value={selectedNotebookContent}
+                  onChange={(event) =>
+                    onPlayerContentChange(
+                      selectedPlayerName,
+                      event.target.value,
+                    )
+                  }
+                  placeholder="Write notes here..."
+                />
+              </Flex>
             ) : null}
             <Box
               position="absolute"

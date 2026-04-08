@@ -2,14 +2,10 @@
 
 import { useState } from 'react';
 import { Box, Button, Input, Text } from '@chakra-ui/react';
-
-type Notebook = {
-  id: number;
-  name: string;
-};
+import type { NotebookListEntry } from '../types/notebook.types';
 
 type NotebookListItemProps = {
-  notebook: Notebook;
+  notebook: NotebookListEntry;
   isSelected: boolean;
   onRename: (id: number, name: string) => void;
   onOpen: (id: number) => void;
@@ -78,7 +74,7 @@ export default function NotebookListItem({
             setIsEditing(true);
           }}
         >
-          Edit
+          Rename
         </Button>
       ) : null}
     </Box>
