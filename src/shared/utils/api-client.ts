@@ -139,3 +139,4 @@ class ApiClient {
 
 export const backendClient = new ApiClient(BACKEND_URL, API_KEY);
 export const externalApiClient = new ApiClient(API_URL, API_KEY);
+export const apiClient = backendClient;
