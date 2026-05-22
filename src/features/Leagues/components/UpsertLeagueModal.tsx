@@ -100,8 +100,8 @@ function computeOrphanedTakenPlayers(
 
 const ALL_BATTING_CATEGORIES = BattingCategorySchema.options;
 const ALL_PITCHING_CATEGORIES = PitchingCategorySchema.options;
-const DEFAULT_BATTING = ['AVG', 'HR', 'RBI', 'BB', 'SB'];
-const DEFAULT_PITCHING = ['ERA', 'W', 'L', 'SV', 'K', 'IP'];
+const DEFAULT_BATTING = ['AVG', 'HR', 'RBI', 'BB', 'SB', 'R'];
+const DEFAULT_PITCHING = ['ERA', 'W', 'L', 'SV', 'K', 'IP', 'WHIP'];
 
 type UpsertLeagueModalProps = {
   isOpen: boolean;
